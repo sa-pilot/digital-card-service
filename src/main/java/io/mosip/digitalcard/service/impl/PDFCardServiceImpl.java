@@ -122,6 +122,8 @@ public class PDFCardServiceImpl implements CardGeneratorService {
 	@Value("${mosip.digitalcard.uin.card.default.templateTypeCode:RPR_UIN_CARD_TEMPLATE}")
 	private String defaultTemplateTypeCode;
 
+	@Value("${mosip.print.service.uincard.signature.required:true}")
+	private boolean isSignatureRequired;
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -261,6 +263,8 @@ public class PDFCardServiceImpl implements CardGeneratorService {
 		ByteArrayOutputStream out = null;
 		try {
 			out = (ByteArrayOutputStream) pdfGenerator.generate(in);
+			logger.info("Signature required inside pdf " + isSignatureRequired);
+			if(isSignatureRequired){
 			PDFSignatureRequestDto request = new PDFSignatureRequestDto(lowerLeftX, lowerLeftY, upperRightX,
 					upperRightY, reason, 1, password);
 			request.setApplicationId("KERNEL");
@@ -291,6 +295,9 @@ public class PDFCardServiceImpl implements CardGeneratorService {
 
 			pdfSignatured = Base64.decodeBase64(signatureResponseDto.getData());
 
+			} else {
+				pdfSignatured = out.toByteArray();
+			}
 		} catch (Exception e) {
 			logger.error(io.mosip.kernel.pdfgenerator.itext.constant.PDFGeneratorExceptionCodeConstant.PDF_EXCEPTION.getErrorMessage(),e.getMessage()
 					+ ExceptionUtils.getStackTrace(e));
